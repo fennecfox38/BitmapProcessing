@@ -1,0 +1,42 @@
+{
+    "version": "2.0.0",
+    "runner": "terminal",
+    "type": "shell",
+    "echoCommand": true,
+    "presentation": { "reveal": "always" },
+    "tasks": [
+        {
+            "label": "Makefile",
+            "type": "shell",
+            "command": "mingw32-make",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "make clean",
+            "type": "shell",
+            "command": "mingw32-make clean",
+            "group": "none",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "run without compile",
+            "type": "shell",
+            "command": ".\\Bitmap",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        }
+    ]
+}

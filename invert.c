@@ -1,47 +1,45 @@
 #include "bitmap.h"
 
-void invertLess8(IMAGE* img){
-    //TODO: processing
-    return;
+void invRGB16(void* p){ *((unsigned short*)p)=~*((unsigned short*)p); }
+void invTriple(void* p){
+    ((RGBTRIPLE*)p)->rgbtRed=~(((RGBTRIPLE*)p)->rgbtRed);
+    ((RGBTRIPLE*)p)->rgbtGreen=~(((RGBTRIPLE*)p)->rgbtGreen);
+    ((RGBTRIPLE*)p)->rgbtBlue=~(((RGBTRIPLE*)p)->rgbtBlue);
 }
-void invert8(IMAGE* img){
-    for(RGBQUAD* p=((RGBQUAD*)(img->extra))+(img->bi.clrUsed-1);p>=(RGBQUAD*)(img->extra);--p){
-        p->rgbAlpha=~(p->rgbAlpha);
-        p->rgbRed=~(p->rgbRed);
-        p->rgbGreen=~(p->rgbGreen);
-        p->rgbBlue=~(p->rgbBlue);
-    }
+void invQuad(void* p){
+    ((RGBQUAD*)p)->rgbAlpha=~(((RGBQUAD*)p)->rgbAlpha);
+    ((RGBQUAD*)p)->rgbRed=~(((RGBQUAD*)p)->rgbRed);
+    ((RGBQUAD*)p)->rgbGreen=~(((RGBQUAD*)p)->rgbGreen);
+    ((RGBQUAD*)p)->rgbBlue=~(((RGBQUAD*)p)->rgbBlue);
 }
-void invert16(IMAGE* img){
-    unsigned char r,g,b;
-    for(RGB16* p=((RGB16*)(img->data+img->sizData))-1;p>=(RGB16*)img->data;--p)
-        *p=~*p;
-}
-void invert24(IMAGE* img){
-    for(RGBTRIPLE* p=((RGBTRIPLE*)(img->data+img->sizData))-1;p>=(RGBTRIPLE*)img->data;--p){
-        p->rgbtRed=~(p->rgbtRed);
-        p->rgbtGreen=~(p->rgbtGreen);
-        p->rgbtBlue=~(p->rgbtBlue);
-    }
-}
-void invert32(IMAGE* img){
-    for(RGBQUAD* p=((RGBQUAD*)(img->data+img->sizData))-1;p>=(RGBQUAD*)img->data;--p){
-        p->rgbAlpha=~(p->rgbAlpha);
-        p->rgbRed=~(p->rgbRed);
-        p->rgbGreen=~(p->rgbGreen);
-        p->rgbBlue=~(p->rgbBlue);
-    }
-}
-void (*invfunc[])(IMAGE*) = {invertLess8,invert8,invert16,invert24,invert32};
 
 int invert(char* src, char* dst){
     IMAGE img;
     
-	if(!readImage(&img,src)) return 0;
+    if(!readImage(&img,src)) return 0;
+    
+    void (*inv)(void*);
+    switch(img.bi.bitCount){
+        case 1: case 4: case 8: 
+            for(RGBQUAD* p=((RGBQUAD*)(img.extra))+(img.bi.clrUsed-1);p>=(RGBQUAD*)(img.extra);--p)
+                invQuad(p);
+        goto TERMINATE; break;
+        case 16: inv=invRGB16; break;
+        case 24: inv=invTriple; break;
+        case 32: inv=invQuad; break;
+        default: goto ERROR; break;
+    }
 
-    invfunc[img.sizPxl](&img);
-
-    if(!writeImage(&img,dst)) return 0;
+    for (int y=img.bi.height-1; y>=0; --y)
+        for (int x=img.bi.width-1; x>=0; --x)
+            inv(PIXEL(img,x,y));
+    
+TERMINATE:
+    if(!writeImage(&img,dst)) goto ERROR;
     freeImage(&img);
     return 1;
+
+ERROR:
+    freeImage(&img);
+    return 0;
 }

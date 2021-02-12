@@ -29,6 +29,7 @@
 *.dylib
 
 # Executables
+bmputill
 *.exe
 *.out
 *.app

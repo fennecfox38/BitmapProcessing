@@ -23,7 +23,7 @@ typedef struct _BITMAPINFOHEADER{    // BMP info header Structure(DIB header)
     int            width;          // The Width of Bitmap
     int            height;         // The Height of Bitmap
     unsigned short planes;         // The # of planes (must be set to 1)
-    unsigned short bitCount;       // The # of bits per pixel (24 for 24bit bitmap)
+    unsigned short bitCount;       // The # of bits per pixel (24 for 24 bitmap)
     unsigned int   compression;    // The type of compression for bottom-up bitmap
     unsigned int   sizeImage;      // The size(byte) of image data only (Pixel Array)
     int            xPelsPerMeter;  // The horizonatal resolution (pixel per meter)
@@ -37,14 +37,14 @@ typedef struct _BITMAPINFOHEADER{    // BMP info header Structure(DIB header)
     int            width;          // The Width of Bitmap
     int            height;         // The Height of Bitmap
     unsigned short planes;         // The # of planes (must be set to 1)
-    unsigned short bitCount;       // The # of bits per pixel (24 for 24bit bitmap)
+    unsigned short bitCount;       // The # of bits per pixel (24 for 24 bitmap)
     unsigned int   compression;    // The type of compression for bottom-up bitmap
     unsigned int   sizeImage;      // The size(byte) of image data only (Pixel Array)
     int            xPelsPerMeter;  // The horizonatal resolution (pixel per meter)
     int            yPelsPerMeter;  // The vertical resolution (pixel per meter)
     unsigned int   clrUsed;        // The # of color indexed in color table.
     unsigned int   clrImportant;   // The # of color required for displaying.
-    //*******************same as BITMAPINFOHEADER until here*******************
+    *******************same as BITMAPINFOHEADER until here*******************
     DWORD        bV4RedMask;
     DWORD        bV4GreenMask;
     DWORD        bV4BlueMask;
@@ -56,15 +56,28 @@ typedef struct _BITMAPINFOHEADER{    // BMP info header Structure(DIB header)
     DWORD        bV4GammaBlue;
 }BITMAPV4HEADER;*/
 
-typedef unsigned short RGB16;      // 2byte of 16bit bitmap color data carrier
-#define R555(P) (((P)&0x7C00)>>10) // read Red value from RGB16 of 16bit 555
-#define G555(P) (((P)&0x3E0)>>5)   // read Green value from RGB16 of 16bit 555
-#define B555(P) ((P)&0x1F)         // read Blue value from RGB16 of 16bit 555
-#define RGB555(R,G,B) (((R)<<10)|((G)<<5)|(B))  // write RGB16 from each channel value of 16bit 555
-#define R565(P) (((P)&0xF800)>>11) // read Red value from RGB16 of 16bit 565
-#define G565(P) (((P)&0x7E0)>>5)   // read Green value from RGB16 of 16bit 565
-#define B565(P) ((P)&0x1F)         // read Blue value from RGB16 of 16bit 565
-#define RGB565(R,G,B) (((R)<<11)|((G)<<5)|(B))  // write RGB16 from each channel value of 16bit 565
+#define GET1(VAL,X) (((VAL)&(0x80>>((X)%8)))?1:0)//>>(7-((X)%8)))
+#define GET4(VAL,X) (((VAL)&(((X)&1)?0x0F:0xF0))>>(((X)&1)?0:4))
+#define SET1(BYTE,BIT,VAL) if(VAL){*(BYTE)|=((0x80)>>(BIT%8));} else{*(BYTE)&=~((0x80)>>(BIT%8));}
+#define SET4(BYTE,PART,VAL) if((PART)&1){((BYTE)->_1)=(VAL);} else{((BYTE)->_0)=(VAL);}
+
+typedef struct{
+    unsigned char _1 : 4;
+    unsigned char _0 : 4;
+} RGB4;
+
+typedef struct{
+    unsigned short blue : 5;
+    unsigned short green : 5;
+    unsigned short red : 5;
+    unsigned short alpha : 1;
+} RGB16_555;
+
+typedef struct{
+    unsigned short blue : 5;
+    unsigned short green : 6;
+    unsigned short red : 5;
+} RGB16_565;
 
 typedef struct _RGBTRIPLE{
     unsigned char rgbtBlue;
@@ -85,16 +98,26 @@ typedef struct{
     BITMAPFILEHEADER bf;        // Bitmap File Header
     BITMAPINFOHEADER bi;        // Bitmap Info Header
     unsigned char *extra, *data;  // (intermediate extra area), (Pointer to Pixel Array Data)
-    int sizData, sizPxl, padding;
-    // (size of Image Data only (Pixel Array)), (Bytes per Pixel), (Padding size when width is not multiple of 4)
+    int sizData, sizRow;
+    // (size of Image Data only (Pixel Array)), (size(byte) of one row including padding)
 } IMAGE;
+
+#define IDX(X,Y,SIZROW,BITCOUNT) (((Y)*(SIZROW)) + ((X)*(BITCOUNT)/8))
+#define PIXEL(IMG,X,Y) (((IMG).data)+IDX(X,Y,((IMG).sizRow),((IMG).bi.bitCount)))
 
 int readImage(IMAGE* img,char* fileName);
 int writeImage(IMAGE* img, char* fileName);
 void freeImage(IMAGE *img);
+void swap1(void* a, void* b, int bitA, int bitB);
+void swap4(void* a, void* b, int partA, int partB);
+void swap8(void* a, void* b);
+void swap16(void* a, void* b);
+void swap24(void* a, void* b);
+void swap32(void* a, void* b);
 int toASCII(char* src, char* dst);
 int gray(char* src, char* dst);
 int invert(char* src, char* dst);
 int mirror(char* src, char* dst);
+int contrast(char* src,char* dst);
 
 #endif

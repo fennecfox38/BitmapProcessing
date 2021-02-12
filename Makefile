@@ -1,4 +1,4 @@
-CC = gcc
+CC = clang
 ifeq ($(RELEASE),1)
 CFLAGS = -O2 -DNDEBUG -c
 LDFLAGS = -O2 -DNDEBUG -o
@@ -10,6 +10,9 @@ LDLIBS = -lm
 SRCS = $(notdir $(wildcard *.c))
 OBJS = $(SRCS:.c=.o)
 TARGET = bmputill.out
+RESULT = result
+INTERNAL = ~
+STORAGE = $(INTERNAL)/storage/shared/project/bitmap
  
 $(TARGET): $(OBJS)
 	$(CC) $(LDFLAGS) $(TARGET) $(OBJS) $(LDLIBS)
@@ -18,9 +21,12 @@ $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) $<
 
 run:
-	./$(TARGET) -e
+	cp $(TARGET) $(INTERNAL)/$(TARGET)
+	chmod 777 $(INTERNAL)/$(TARGET)
+	$(INTERNAL)/$(TARGET) -e
+	rm $(INTERNAL)/$(TARGET)
 
 clean:
-	rm -f *.o
+	rm -f *.o 
 	rm -f $(TARGET)
 	rm -rf result

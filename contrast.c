@@ -1,7 +1,17 @@
+/************************How to emphasize contrast************************
+ * 1. Get 'distance from middle value in Range'. (ex. 0x7F for 0x00~0xFF)
+ * 2. Amplify distance by multiplying given factor.
+ * 3. Recovery: Add up distance to middle value.
+ * 4. Check overflow (or underflow): replace to max or min value if needed.
+ *************************************************************************/
+
 #include "bitmap.h"
+// Macro defined function that multiplies factor to 'distance from medium'
 #define DISPERSE(VAL,MAX,FAC) (((MAX)>>1)+(((VAL)-((MAX)>>1))*(FAC)))
+// Macro defined function that checks and fixes overflow and underflow.
 #define INRANGE(VAL,MAX) (((VAL)>(MAX))?(MAX):(((VAL)<0)?0:(VAL)))
 
+// Below are contrasting logic for each bit size and format.
 void contrastRGB16565(void *p){
     short r=DISPERSE(((RGB16_565*)p)->red,0x1F,1.3);
     short g=DISPERSE(((RGB16_565*)p)->green,0x3F,1.4);
@@ -36,31 +46,34 @@ void contrastQuad(void *p){
 }
 
 int contrast(char* src, char* dst){
-    IMAGE img;
+    IMAGE img;  // Container for Abstracted info and data of BMP file
     
     if(!readImage(&img,src)) return 0;
     void (*func)(void*);
     switch(img.bi.bitCount){
-        case 1: case 4: case 8: 
+        case 1: case 4: case 8:     // if it has color table, just process color table only.
             for(RGBQUAD* p=((RGBQUAD*)(img.extra))+(img.bi.clrUsed-1);p>=(RGBQUAD*)(img.extra);--p)
                 contrastQuad(p);
-            goto TERMINATE; break;
+            goto TERMINATE; break;  // skipping Pixel Array traversal.
+
+        // Assiging function by color depth.
         case 16: func=(img.bi.compression==0 ? contrastRGB16555 : contrastRGB16565); break;
         case 24: func=contrastTriple; break;
         case 32: func=contrastQuad; break;
-        default: goto ERROR; break;
+        default: goto ERROR; break; // ???: Error!
     }
 
+    // Pixel Array Traversal by assigned function.
     for (int y=img.bi.height-1; y>=0; --y)
         for (int x=img.bi.width-1; x>=0; --x)
             func(PIXEL(img,x,y));
 
-TERMINATE:
+TERMINATE:  // Write output before termination.
     if(!writeImage(&img,dst)) goto ERROR;
     freeImage(&img);
-    return 1;
+    return 1;   // Succeed
 
-ERROR:
+ERROR:      // free allocated memory even if failed.
     freeImage(&img);
-    return 0;
+    return 0;   // failed in some reason.
 }

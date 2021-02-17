@@ -1,18 +1,31 @@
+/****************************************************************************************************
+ * Designed Command Line Argument Input
+ * (project directory)>./bmputil [option] [src filename (w/ extension)] [dst filename (w/ extension)]
+ * option: [ toASCII: -a | contrast: -c | gray: -g | invert: -i | mirror -m ]
+ * 
+ * How to check path validity
+ * - rely on function 'access'.
+ * - try making directory if not exist.
+ * - extract path as inserting '\0' temporarily (put directory separator back after processing)
+ * 
+ * (!!Only main function!!) is not compatible with Windows OS. (using UNIX/LINUX system call)
+ ****************************************************************************************************/
+
 #include <stdio.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include <string.h>         // strlen, strcmp
+#include <sys/stat.h>       // mkdir
+#include <sys/types.h>      // mkdir
+#include <unistd.h>         // access, mkdir
 #include "bitmap.h"
 
 int isPathValid(char* path,int len){
-    for(int i=1;i<len;++i){
+    for(int i=1;i<len;++i){ // Traverse path from top to bottom
         if(path[i]=='/'||path[i]=='\\'){
-            path[i]='\0';
-            if(access(path,W_OK)==-1)
-                if(mkdir(path,0777)==-1)
+            path[i]='\0';   // and extract path by replacing with null
+            if(access(path,W_OK)==-1)       // if directory is not exist
+                if(mkdir(path,0777)==-1)    // make directory
                     return 0;
-            path[i]='/';
+            path[i]='/';    // recovery
         }
     }
     return (access(path,W_OK)==0 ? 1 : (mkdir(path,0777)?0:1));
@@ -20,29 +33,32 @@ int isPathValid(char* path,int len){
 
 int isFileValid(char* file, int mode){
     int len = strlen(file);
-    if(mode&R_OK){
+    if(mode&R_OK){  // if it is read mode (src file)
         if(strcmp(file+len-4,".bmp")) return 0;
         return (access(file,R_OK)==0);
+        // check file extension.
+        // return validity through function 'access'.
     }
-    if(mode&W_OK){
+    if(mode&W_OK){  // if it is write mode (dst file)
+        // check file extension.
         if(strcmp(file+len-4,".bmp") && strcmp(file+len-4,".txt")) return 0;
         for(--len;len>=0&&file[len]!='/'&&file[len]!='\\';--len);
-        if(len<0) return 1;
-        file[len]='\0';
-        int res = isPathValid(file,len);
-        file[len]='/';
+        if(len<0) return 1; // find where is border between path and file
+        file[len]='\0';     // insert temporary null character
+        int res = isPathValid(file,len); // validate path
+        file[len]='/';      // recover directory separator back.
         return res;
     }
     return (access(file,F_OK)==0);
 }
 
 int main(int argc, char* argv[]){
-    if(argc!=4) goto INVALID;
+    if(argc!=4) goto INVALID;   // Wrong Number of Argument!
 
-    if(!isFileValid(argv[2],R_OK)) goto INVALID;
-    if(!isFileValid(argv[3],W_OK)) goto INVALID;
+    if(!isFileValid(argv[2],R_OK)) goto INVALID;    // src path validation
+    if(!isFileValid(argv[3],W_OK)) goto INVALID;    // dst path validation
 
-    if(argv[1][0]!='-') goto INVALID;
+    if(argv[1][0]!='-') goto INVALID; // option should comes first.
     switch(argv[1][1]){
         case 'a': case 'A': toASCII(argv[2],argv[3]); break;
         case 'c': case 'C': contrast(argv[2],argv[3]); break;
@@ -54,7 +70,7 @@ int main(int argc, char* argv[]){
 
     return 0;
     
-INVALID:
+INVALID:    // When argument is invaild: show warning message and terminate.
     if(argc==2 && argv[1][0]=='-' && argv[1][1]=='e') goto EXAMPLE;
     puts("Invalid argument!");
     puts("for example >./bmputil [option] [src filename (w/ extension)] [dst filename (w/ extension)]");
@@ -62,7 +78,7 @@ INVALID:
     puts("Make sure the path is valid!");
     return 0;
 
-EXAMPLE:
+EXAMPLE:    // for test purpose. convert source files to every single available option.
     if(access("source",R_OK)==-1) return -1;
     if(access("result",W_OK)==-1) if(mkdir("result",0777)==-1) return -1;
     if(access("result/lena",W_OK)==-1) if(mkdir("result/lena",0777)==-1) return -1;

@@ -1,4 +1,4 @@
-# [BITMAP Project](https://velog.io/@fennecfox38/series/Bitmap)
+# [BITMAP Project](https://fennecfox38.github.io/2021/01/31/Bitmap-Project.html)
 
 이 repository는 프로젝트를 진행하고 velog에 포스팅하며 기록으로 남겨놓기 위해 만들었습니다.
 BITMAP Project는 
@@ -28,7 +28,7 @@ BITMAP Project는
     (project directory)>./bmputil [option] [src filename (w/ extension)] [dst filename (w/ extension)]
     option: [ toASCII: -a | contrast: -c | gray: -g | invert: -i | mirror -m ]
 
-자세한 설명은 [velog의 bitmap 시리즈](https://velog.io/@fennecfox38/series/Bitmap)를 참조하십시오.
+자세한 설명은 [fennecfox38.github.io의 bitmap 시리즈](https://fennecfox38.github.io/2021/01/31/Bitmap-Project.html)를 참조하십시오.
 
 ex)
 

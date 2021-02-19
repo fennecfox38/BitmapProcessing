@@ -1,6 +1,6 @@
 # [BITMAP Project](https://fennecfox38.github.io/2021/01/31/Bitmap-Project.html)
 
-이 repository는 프로젝트를 진행하고 velog에 포스팅하며 기록으로 남겨놓기 위해 만들었습니다.
+이 repository는 프로젝트를 진행하고 github.io에 포스팅하며 기록으로 남겨놓기 위해 만들었습니다.
 BITMAP Project는 
 
 - toASCII: 비트맵 파일을 아스키 아트 텍스트 파일로 변환
@@ -20,7 +20,7 @@ BITMAP Project는
 
 만 지원합니다.
 
-이 repository의 내용들은 VS Code와 C/C++ Extension, mingw64 gcc, c11 환경에서 작성되었으며,
+이 repository의 내용들은 VS Code와 C/C++ Extension, gcc, c11 환경에서 작성되었으며,
 참고를 위해 source, result폴더의 자료들, .vscode 아래의 json들, Makefile을 남겨놓았습니다.
 
 사용 방법
